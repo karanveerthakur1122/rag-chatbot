@@ -59,7 +59,7 @@ A sophisticated **Retrieval-Augmented Generation (RAG)** chatbot built with vani
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/rag-chatbot.git
+   git clone https://github.com/karanveerthakur1122/rag-chatbot.git
    cd rag-chatbot
    ```
 
@@ -245,7 +245,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions, issues, or suggestions:
 - Open an issue on GitHub
-- Email: your-email@example.com
+- Email: codewithkaranveer@gmail.com
 
 ---
 
@@ -254,5 +254,3 @@ For questions, issues, or suggestions:
 If you find this project useful, please consider giving it a star! ⭐
 
 ---
-
-**Made with ❤️ using vanilla JavaScript and Google Gemini**
