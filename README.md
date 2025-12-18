@@ -1,3 +1,5 @@
+Live link: https://rag-chatbotapp.netlify.app/
+
 # 🤖 RAG Chatbot - Gemini Powered
 
 A sophisticated **Retrieval-Augmented Generation (RAG)** chatbot built with vanilla JavaScript and powered by Google's Gemini API. Upload documents, chat intelligently, and manage conversations with a clean, modern UI.
