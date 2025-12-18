@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chatbot - Gemini Powered</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+    <!-- API Key Configuration Modal -->
+    <div id="apiKeyModal" class="modal">
+        <div class="modal-content">
+            <h2><i class="fas fa-key"></i> Configure Gemini API Key</h2>
+            <p>Enter your Gemini API key to get started. Your key is stored locally and never sent anywhere except to Google's Gemini API.</p>
+            <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key" autocomplete="off">
+            <div class="modal-actions">
+                <button id="saveApiKeyBtn" class="btn-primary">Save & Start</button>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link">Get API Key</a>
+            </div>
+            <div id="apiKeyError" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1><i class="fas fa-robot"></i> RAG Chatbot</h1>
+                <span class="subtitle">Your custom AI Chatbot</span>
+            </div>
+            <div class="header-right">
+                <button id="settingsBtn" class="icon-btn" title="Settings"><i class="fas fa-cog"></i></button>
+                <button id="exportBtn" class="icon-btn" title="Export chat"><i class="fas fa-download"></i></button>
+                <button id="clearChatBtn" class="icon-btn" title="Clear chat"><i class="fas fa-trash"></i></button>
+                <a href="https://github.com/karanveerthakur1122" target="_blank" class="icon-btn dev-link" title="Know the Developer">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Left Sidebar -->
+        <aside id="leftSidebar" class="left-sidebar">
+            <!-- Knowledge Base Section -->
+            <div class="sidebar-section">
+                <button id="knowledgeBtn" class="sidebar-main-btn">
+                    <i class="fas fa-book"></i>
+                    <span>Knowledge Base</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Chats Section -->
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <h3><i class="fas fa-comments"></i> Chats</h3>
+                    <button id="newChatBtn" class="icon-btn" title="New chat"><i class="fas fa-plus"></i></button>
+                </div>
+                <div class="chat-history-list" id="chatHistoryList">
+                    <div class="chat-history-item active">
+                        <div class="chat-history-content">
+                            <div class="chat-history-title">Current Chat</div>
+                            <div class="chat-history-time">Just now</div>
+                        </div>
+                        <button class="chat-history-delete" title="Delete chat"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+
+
+        <!-- Main Chat Area -->
+        <main class="chat-container">
+            <div id="chatMessages" class="chat-messages">
+                <div class="welcome-message">
+                    <h2><i class="fas fa-hand-sparkles"></i> Welcome to RAG Chatbot!</h2>
+                    <p>Upload documents or paste text to build your knowledge base, then ask questions about them.</p>
+                    <div class="feature-list">
+                        <div class="feature"><i class="fas fa-magic"></i> Smart document retrieval</div>
+                        <div class="feature"><i class="fas fa-database"></i> Local caching</div>
+                        <div class="feature"><i class="fas fa-code"></i> Markdown & code support</div>
+                        <div class="feature"><i class="fas fa-brain"></i> AI-powered responses</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typingIndicator" class="typing-indicator hidden">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Ask a question about your documents..." 
+                        rows="1"
+                        autocomplete="off"
+                    ></textarea>
+                    <button id="sendBtn" class="send-btn" title="Send message">
+                        <i class="fas fa-paper-plane send-icon"></i>
+                    </button>
+                </div>
+                <div class="input-footer">
+                    <small>Press Enter to send • Ctrl+Enter for new line</small>
+                    <small>AI can make mistakes, so please verify and recheck critical information.</small>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Knowledge Base Management Modal -->
+    <div id="knowledgeModal" class="modal">
+        <div class="modal-content knowledge-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-book"></i> Knowledge Base Management</h2>
+                <button class="close-btn" id="closeKnowledgeBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <!-- Scope Toggle -->
+                <div class="knowledge-scope">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="chatSpecificKnowledge">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Use chat-specific knowledge base</span>
+                    </label>
+                    <small>When enabled, each chat will have its own knowledge base. Otherwise, all chats share the same documents.</small>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="knowledge-section">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Upload Documents</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.md" multiple hidden>
+                        <div class="upload-placeholder">
+                            <span class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
+                            <p>Drop files here or click to upload</p>
+                            <small>Supports: TXT, MD, PDF</small>
+                        </div>
+                    </div>
+                    <div class="api-limitation-warning">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong> Files are processed client-side for text extraction and RAG retrieval.
+                    </div>
+                </div>
+
+                <!-- Text Input Alternative -->
+                <div class="knowledge-section">
+                    <h3><i class="fas fa-keyboard"></i> Paste Text</h3>
+                    <textarea id="textInput" placeholder="Paste your document content here..." rows="6"></textarea>
+                    <button id="addTextBtn" class="btn-secondary"><i class="fas fa-plus"></i> Add to Knowledge Base</button>
+                </div>
+
+                <!-- Document List -->
+                <div class="knowledge-section">
+                    <h3><i class="fas fa-file-alt"></i> Documents (<span id="docCount">0</span>)</h3>
+                    <div id="documentList" class="document-list"></div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="knowledge-section">
+                    <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Documents:</span>
+                            <span class="stat-value" id="docCountStat">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Chunks:</span>
+                            <span class="stat-value" id="chunkCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Characters:</span>
+                            <span class="stat-value" id="charCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-cog"></i> Settings</h2>
+                <button class="close-btn" id="closeSettingsBtn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-group">
+                    <label for="settingsApiKey">Gemini API Key:</label>
+                    <div class="input-with-btn">
+                        <input type="password" id="settingsApiKey" placeholder="••••••••••••••••">
+                        <button id="updateApiKeyBtn" class="btn-secondary">Update</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="apiPlan">API Plan:</label>
+                    <select id="apiPlan" class="setting-select">
+                        <option value="free">Free Tier (Gemini Flash/Pro)</option>
+                        <option value="pro">Pro Tier (Gemini 1.5 Pro)</option>
+                    </select>
+                    <small>Select your API plan tier</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="modelSelect">Model:</label>
+                    <select id="modelSelect" class="setting-select">
+                        <!-- Populated dynamically -->
+                    </select>
+                    <small id="modelDescription">Model description</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="chunkSize">Chunk Size (characters):</label>
+                    <input type="number" id="chunkSize" value="600" min="200" max="2000" step="100">
+                    <small>Recommended: 500-800 characters per chunk</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="chunkOverlap">Chunk Overlap (characters):</label>
+                    <input type="number" id="chunkOverlap" value="100" min="0" max="500" step="50">
+                    <small>Overlap helps maintain context between chunks</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="maxContext">Max Context Messages:</label>
+                    <input type="number" id="maxContext" value="10" min="3" max="20" step="1">
+                    <small>Number of previous messages to include in context</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="topKChunks">Top K Relevant Chunks:</label>
+                    <input type="number" id="topKChunks" value="3" min="1" max="10" step="1">
+                    <small>Number of relevant document chunks to retrieve</small>
+                </div>
+
+                <div class="setting-group">
+                    <label for="temperature">Temperature:</label>
+                    <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                    <span id="temperatureValue">0.7</span>
+                    <small>Higher = more creative, Lower = more focused</small>
+                </div>
+
+                <div class="setting-actions">
+                    <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+                    <button id="clearCacheBtn" class="btn-danger">Clear All Cache</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="cache-manager.js"></script>
+    <script type="module" src="rag-engine.js"></script>
+    <script type="module" src="gemini-api.js"></script>
+    <script type="module" src="chat-ui.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
